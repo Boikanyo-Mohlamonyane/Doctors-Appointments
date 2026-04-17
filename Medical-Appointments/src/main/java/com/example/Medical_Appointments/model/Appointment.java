@@ -1,10 +1,9 @@
 package com.example.Medical_Appointments.model;
 
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
+
 @Entity
 @Getter
 @Setter
@@ -17,16 +16,17 @@ public class Appointment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JsonIgnore
+    // 👤 PATIENT (USER)
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "user_id")
     private User user;
 
-    @ManyToOne
-    @JsonIgnore // 🔥 change this (REMOVE JsonBackReference)
+    // 🩺 DOCTOR
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "doctor_id")
     private Doctor doctor;
 
     private String date;
     private String time;
-
     private String status;
 }

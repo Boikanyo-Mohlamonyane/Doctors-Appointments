@@ -23,6 +23,7 @@ public class SecurityConfig {
 
         http
                 .csrf(csrf -> csrf.disable())
+                .cors(cors -> {})
                 .headers(headers -> headers.frameOptions(frame -> frame.disable()))
 
                 .sessionManagement(session ->
@@ -38,9 +39,12 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html").permitAll()
 
-                        // 👑 ADMIN
-                        .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
 
+                        // 🩺 ADMIN + USER (your requirement)
+                        .requestMatchers("/api/admin/doctors/**").hasAnyAuthority("ADMIN", "USER")
+
+                        // fallback admin protection
+                        .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
                         // 🩺 DOCTOR
                         .requestMatchers("/api/doctor/**").hasAuthority("DOCTOR")
 

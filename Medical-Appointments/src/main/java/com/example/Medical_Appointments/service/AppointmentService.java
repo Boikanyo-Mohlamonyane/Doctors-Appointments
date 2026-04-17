@@ -10,6 +10,7 @@ import com.example.Medical_Appointments.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -64,6 +65,16 @@ public class AppointmentService {
 
         a.setStatus("APPROVED");
         return repo.save(a);
+    }
+
+
+    public List<Appointment> getMyAppointments() {
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        String email = auth.getName(); // logged-in username/email
+
+        return repo.findByUserEmail(email);
     }
 
     // 🩺 DOCTOR → REJECT

@@ -24,7 +24,12 @@ public class AppointmentController {
     public Appointment book(@RequestBody AppointmentRequest request) {
         return service.book(request);
     }
-
+    // 👤 USER → VIEW OWN APPOINTMENTS
+    @GetMapping("/my")
+    @PreAuthorize("hasAuthority('USER')")
+    public List<Appointment> getMyAppointments() {
+        return service.getMyAppointments();
+    }
     // 👑 ADMIN → VIEW ALL APPOINTMENTS
     @GetMapping
     @PreAuthorize("hasAuthority('ADMIN')")

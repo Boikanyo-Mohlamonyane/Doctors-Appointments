@@ -56,6 +56,6 @@ public class AuthService {
                 user.getRole().getName()
         );
 
-        return new LoginResponse(token);
+        return new LoginResponse(token,user.getRole().getName());
     }
 }
