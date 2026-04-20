@@ -1,6 +1,7 @@
 package com.example.Medical_Appointments.service;
 
 import com.example.Medical_Appointments.dto.AppointmentRequest;
+import com.example.Medical_Appointments.dto.RescheduleRequest;
 import com.example.Medical_Appointments.model.Appointment;
 import com.example.Medical_Appointments.model.Doctor;
 import com.example.Medical_Appointments.model.User;
@@ -10,10 +11,13 @@ import com.example.Medical_Appointments.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -66,7 +70,39 @@ public class AppointmentService {
         a.setStatus("APPROVED");
         return repo.save(a);
     }
+    // User Deleting Appointment
+    public void deleteAppointment(Long appID) {
 
+        Appointment appointment = repo.findById(appID)
+                .orElseThrow(() ->
+                        new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
+                                "Appointment not found with ID: " + appID
+                        )
+                );
+
+        repo.delete(appointment);
+    }
+    // ================= RESCHEDULE APPOINTMENT =================
+    public Appointment rescheduleAppointment(Long appointmentId, RescheduleRequest request) {
+
+        Appointment appointment = repo.findById(appointmentId)
+                .orElseThrow(() ->
+                        new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
+                                "Appointment not found with ID: " + appointmentId
+                        )
+                );
+
+        // update fields
+        appointment.setDate(request.getDate());
+        appointment.setTime(request.getTime());
+
+        // optional: update doctor if needed
+        // appointment.setDoctor(... fetch doctor by request.getDoctorId())
+
+        return repo.save(appointment);
+    }
 
     public List<Appointment> getMyAppointments() {
 
@@ -77,12 +113,23 @@ public class AppointmentService {
         return repo.findByUserEmail(email);
     }
 
-    // 🩺 DOCTOR → REJECT
-    public Appointment reject(Long id) {
-        Appointment a = repo.findById(id)
+    // 🩺 REJECT APPOINTMENT
+    public Appointment reject(Long id, String reason, String doctorEmail) {
+
+        Appointment appointment = repo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
-        a.setStatus("REJECTED");
-        return repo.save(a);
+        User doctor = userRepo.findByEmail(doctorEmail)
+                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+
+        // ================= UPDATE STATUS =================
+        appointment.setStatus("REJECTED");
+
+        // ================= AUDIT FIELDS =================
+        appointment.setRejectionReason(reason);
+        appointment.setRejectedBy(doctor.getId());
+        appointment.setRejectedAt(LocalDateTime.now());
+
+        return repo.save(appointment);
     }
 }

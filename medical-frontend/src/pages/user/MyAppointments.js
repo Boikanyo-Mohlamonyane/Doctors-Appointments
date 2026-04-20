@@ -2,6 +2,10 @@ import React, { useEffect, useState } from "react";
 import { getMyAppointments } from "../../services/appointmentService";
 import Layout from "../../components/Layout";
 
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import interactionPlugin from "@fullcalendar/interaction";
+
 const API = "http://localhost:8080/api/appointments";
 
 export default function MyAppointments() {
@@ -15,6 +19,7 @@ export default function MyAppointments() {
   const [newDate, setNewDate] = useState("");
   const [newTime, setNewTime] = useState("");
 
+  // ================= FETCH =================
   useEffect(() => {
     fetchAppointments();
   }, []);
@@ -33,14 +38,21 @@ export default function MyAppointments() {
 
   // ================= DELETE =================
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this appointment?")) return;
+    if (!window.confirm("Are you sure you want to delete this appointment?"))
+      return;
 
     try {
-      await fetch(`${API}/${id}`, {
+      const userId = localStorage.getItem("userId");
+
+      await fetch(`http://localhost:8080/api/appointments/user/${userId}`, {
         method: "DELETE",
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`
-        }
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          appointmentId: id
+        })
       });
 
       setAppointments((prev) => prev.filter((a) => a.id !== id));
@@ -49,7 +61,7 @@ export default function MyAppointments() {
     }
   };
 
-  // ================= RESCHEDULE =================
+  // ================= RESCHEDULE (MODAL) =================
   const handleReschedule = async () => {
     try {
       await fetch(`${API}/reschedule/${selectedAppointment.id}`, {
@@ -70,6 +82,37 @@ export default function MyAppointments() {
       fetchAppointments();
     } catch (err) {
       console.log(err);
+    }
+  };
+
+  // ================= DRAG & DROP RESCHEDULE (CALENDAR) =================
+  const handleEventDrop = async (info) => {
+    const newDate = info.event.startStr;
+
+    // 🚫 BLOCK WEEKENDS (Hospital rule)
+    const day = new Date(newDate).getDay();
+    if (day === 0 || day === 6) {
+      alert("Hospital only allows Monday–Friday appointments");
+      info.revert();
+      return;
+    }
+
+    try {
+      await fetch(`${API}/reschedule/${info.event.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify({
+          date: newDate,
+          time: info.event.extendedProps.time
+        })
+      });
+
+    } catch (err) {
+      console.log(err);
+      info.revert();
     }
   };
 
@@ -96,20 +139,45 @@ export default function MyAppointments() {
     return matchesSearch && matchesStatus;
   });
 
+  // ================= CALENDAR EVENTS =================
+  const calendarEvents = appointments.map((a) => ({
+    id: a.id,
+    title: a.doctor.name,
+    date: a.date,
+    extendedProps: {
+      time: a.time,
+      status: a.status
+    }
+  }));
+
   return (
     <Layout>
       <div className="p-6 bg-gray-50 min-h-screen">
 
-        {/* HEADER */}
         <h1 className="text-3xl font-bold text-gray-800">
           My Appointments
         </h1>
 
         <p className="text-gray-500 mb-6">
-          Manage your bookings
+          Manage bookings (Cards + Hospital Calendar)
         </p>
 
-        {/* ================= LOADING STATE (FIXED ESLINT WARNING) ================= */}
+        {/* ================= CALENDAR ================= */}
+        <div className="bg-white p-4 rounded-xl shadow mb-6">
+          <FullCalendar
+            plugins={[dayGridPlugin, interactionPlugin]}
+            initialView="dayGridMonth"
+            editable={true}
+            events={calendarEvents}
+            eventDrop={handleEventDrop}
+            height="auto"
+            validRange={{
+              start: new Date()
+            }}
+          />
+        </div>
+
+        {/* ================= LOADING ================= */}
         {loading && (
           <div className="flex flex-col items-center justify-center py-16">
             <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
@@ -122,7 +190,6 @@ export default function MyAppointments() {
         {/* ================= CONTENT ================= */}
         {!loading && (
           <>
-
             {/* FILTER */}
             <div className="flex gap-3 mb-6">
               <input
@@ -144,15 +211,6 @@ export default function MyAppointments() {
               </select>
             </div>
 
-            {/* EMPTY STATE */}
-            {filtered.length === 0 && (
-              <div className="text-center py-10 bg-white rounded-xl shadow">
-                <h3 className="text-lg font-semibold text-gray-700">
-                  No appointments found
-                </h3>
-              </div>
-            )}
-
             {/* CARDS */}
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
 
@@ -171,7 +229,6 @@ export default function MyAppointments() {
                     {a.status}
                   </span>
 
-                  {/* ACTIONS */}
                   <div className="flex gap-2 mt-4">
 
                     <button
@@ -197,7 +254,7 @@ export default function MyAppointments() {
           </>
         )}
 
-        {/* ================= RESCHEDULE MODAL ================= */}
+        {/* ================= MODAL ================= */}
         {selectedAppointment && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
 

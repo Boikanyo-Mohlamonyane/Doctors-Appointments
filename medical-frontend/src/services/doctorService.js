@@ -10,6 +10,10 @@ export const registerDoctor = (data) => {
   return api.post("/admin/doctors", data);
 };
 
+export const registerAdmin = async (data) => {
+  return api.post("/auth/register-admin", data);
+};
+
 // OPTIONAL: DELETE DOCTOR
 export const deleteDoctor = (id) => {
   return api.delete(`/admin/doctors/${id}`);

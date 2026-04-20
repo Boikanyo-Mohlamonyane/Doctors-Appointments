@@ -1,11 +1,6 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import Layout from "../../components/Layout";
-
-import {
-  getUsers,
-  updateUserRole,
-  deleteUser,
-} from "../../services/userService";
+import { getUsers, updateUserRole, deleteUser } from "../../services/userService";
 
 export default function ManageUsers() {
   const [users, setUsers] = useState([]);
@@ -26,12 +21,14 @@ export default function ManageUsers() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [editRole, setEditRole] = useState("");
 
+  const [confirmDelete, setConfirmDelete] = useState(null);
+
   // ================= DEBOUNCE SEARCH =================
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(search);
       setPage(0);
-    }, 500);
+    }, 400);
 
     return () => clearTimeout(timer);
   }, [search]);
@@ -52,7 +49,7 @@ export default function ManageUsers() {
       setUsers(res.data.content || res.data);
       setTotalPages(res.data.totalPages || 1);
     } catch {
-      setError("Failed to load users");
+      setError("Unable to load users");
     } finally {
       setLoading(false);
     }
@@ -62,13 +59,13 @@ export default function ManageUsers() {
     fetchUsers();
   }, [fetchUsers]);
 
-  // ================= UPDATE ROLE (OPTIMISTIC UI) =================
+  // ================= ROLE UPDATE =================
   const handleUpdateRole = async () => {
     if (!selectedUser) return;
 
-    const oldUsers = [...users];
+    const backup = [...users];
 
-    // optimistic update
+    // optimistic UI update
     setUsers((prev) =>
       prev.map((u) =>
         u.id === selectedUser.id
@@ -83,28 +80,49 @@ export default function ManageUsers() {
       await updateUserRole(selectedUser.id, editRole);
       setSelectedUser(null);
     } catch {
-      setUsers(oldUsers); // rollback
-      setError("Failed to update user role");
+      setUsers(backup);
+      setError("Role update failed");
     } finally {
       setActionLoading(false);
     }
   };
 
   // ================= DELETE USER =================
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this user?")) return;
+  const handleDelete = async () => {
+    const id = confirmDelete;
+    if (!id) return;
 
-    const oldUsers = [...users];
+    const backup = [...users];
 
     setUsers((prev) => prev.filter((u) => u.id !== id));
 
     try {
       await deleteUser(id);
+      setConfirmDelete(null);
     } catch {
-      setUsers(oldUsers); // rollback
+      setUsers(backup);
       setError("Delete failed");
     }
   };
+
+  // ================= ROLE BADGE =================
+  const roleBadge = useMemo(() => {
+    return (role) => {
+      const styles = {
+        ADMIN: "bg-red-100 text-red-700",
+        DOCTOR: "bg-green-100 text-green-700",
+        USER: "bg-blue-100 text-blue-700",
+      };
+
+      return (
+        <span
+          className={`px-2 py-1 text-xs rounded-full ${styles[role] || "bg-gray-100"}`}
+        >
+          {role}
+        </span>
+      );
+    };
+  }, []);
 
   return (
     <Layout>
@@ -113,10 +131,10 @@ export default function ManageUsers() {
         {/* HEADER */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-800">
-            User Management
+            User Management Center
           </h1>
           <p className="text-gray-500">
-            Enterprise Admin Control Panel
+            Enterprise-grade hospital access control system
           </p>
         </div>
 
@@ -126,7 +144,7 @@ export default function ManageUsers() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search users..."
+            placeholder="Search users by name or email..."
             className="p-3 border rounded-lg w-full md:w-1/2"
           />
 
@@ -153,22 +171,22 @@ export default function ManageUsers() {
         )}
 
         {/* LOADING */}
-        {loading && (
-          <div className="bg-white p-4 rounded shadow animate-pulse">
+        {loading ? (
+          <div className="bg-white p-6 rounded shadow animate-pulse">
             Loading users...
           </div>
-        )}
-
-        {/* TABLE */}
-        {!loading && (
+        ) : users.length === 0 ? (
+          <div className="bg-white p-6 rounded shadow text-gray-500">
+            No users found.
+          </div>
+        ) : (
           <div className="bg-white shadow rounded-xl overflow-hidden">
 
             <table className="w-full text-left">
 
-              <thead className="bg-gray-100">
+              <thead className="bg-gray-100 text-gray-600 text-sm">
                 <tr>
-                  <th className="p-3">ID</th>
-                  <th className="p-3">Name</th>
+                  <th className="p-3">User</th>
                   <th className="p-3">Email</th>
                   <th className="p-3">Role</th>
                   <th className="p-3">Actions</th>
@@ -177,14 +195,13 @@ export default function ManageUsers() {
 
               <tbody>
                 {users.map((user) => (
-                  <tr key={user.id} className="border-t">
+                  <tr key={user.id} className="border-t hover:bg-gray-50">
 
-                    <td className="p-3">{user.id}</td>
-                    <td className="p-3">{user.name}</td>
-                    <td className="p-3">{user.email}</td>
+                    <td className="p-3 font-medium">{user.name}</td>
+                    <td className="p-3 text-gray-600">{user.email}</td>
 
                     <td className="p-3">
-                      {user.role.name}
+                      {roleBadge(user.role.name)}
                     </td>
 
                     <td className="p-3 flex gap-2">
@@ -194,14 +211,14 @@ export default function ManageUsers() {
                           setSelectedUser(user);
                           setEditRole(user.role.name);
                         }}
-                        className="px-3 py-1 bg-blue-500 text-white rounded"
+                        className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
                       >
-                        Edit
+                        Edit Role
                       </button>
 
                       <button
-                        onClick={() => handleDelete(user.id)}
-                        className="px-3 py-1 bg-red-500 text-white rounded"
+                        onClick={() => setConfirmDelete(user.id)}
+                        className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
                       >
                         Delete
                       </button>
@@ -217,7 +234,7 @@ export default function ManageUsers() {
         )}
 
         {/* PAGINATION */}
-        <div className="flex gap-2 mt-4">
+        <div className="flex gap-2 mt-4 flex-wrap">
           {Array.from({ length: totalPages }, (_, i) => (
             <button
               key={i}
@@ -231,14 +248,14 @@ export default function ManageUsers() {
           ))}
         </div>
 
-        {/* MODAL */}
+        {/* ================= ROLE MODAL ================= */}
         {selectedUser && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
 
             <div className="bg-white p-6 rounded-xl w-96">
 
               <h2 className="text-xl font-bold mb-4">
-                Edit Role
+                Update User Role
               </h2>
 
               <select
@@ -266,6 +283,43 @@ export default function ManageUsers() {
                   className="px-4 py-2 bg-green-600 text-white rounded"
                 >
                   {actionLoading ? "Saving..." : "Save"}
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+        )}
+
+        {/* ================= DELETE MODAL ================= */}
+        {confirmDelete && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+
+            <div className="bg-white p-6 rounded-xl w-96">
+
+              <h2 className="text-lg font-bold mb-3">
+                Confirm Delete
+              </h2>
+
+              <p className="text-gray-600 mb-4">
+                This action cannot be undone.
+              </p>
+
+              <div className="flex justify-end gap-2">
+
+                <button
+                  onClick={() => setConfirmDelete(null)}
+                  className="px-4 py-2 bg-gray-200 rounded"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  onClick={handleDelete}
+                  className="px-4 py-2 bg-red-600 text-white rounded"
+                >
+                  Delete
                 </button>
 
               </div>

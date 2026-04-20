@@ -10,6 +10,7 @@ import com.example.Medical_Appointments.security.JwtUtil;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,8 @@ public class AuthService {
     private final RoleRepository roleRepo;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+
+    private EmailService emailService;
 
     // 👤 REGISTER USER (DEFAULT = USER ROLE)
     public User register(RegisterRequest request) {

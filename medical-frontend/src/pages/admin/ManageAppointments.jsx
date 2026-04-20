@@ -1,57 +1,108 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Layout from "../../components/Layout";
-import { getAllAppointments } from "../../services/appointmentService";
+import axios from "axios";
+import * as XLSX from "xlsx";
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
 
-export default function ManageAppointments() {
+const API = "http://localhost:8080/api/appointments";
+
+export default function AdminDashboard() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const token = localStorage.getItem("token");
+
   // ================= FETCH =================
-  const fetchAppointments = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      setError("");
 
-      const res = await getAllAppointments();
+      const res = await axios.get(API, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
       setAppointments(res.data);
-
     } catch (err) {
-      setError("Failed to load appointments");
+      setError("Failed to load system data");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [token]);
 
   useEffect(() => {
-    fetchAppointments();
-  }, [fetchAppointments]);
+    fetchData();
+  }, [fetchData]);
 
-  // ================= STATUS BADGES (MEMOIZED) =================
-  const getStatusClass = useMemo(() => {
-    return {
-      PENDING: "bg-yellow-100 text-yellow-700",
-      APPROVED: "bg-green-100 text-green-700",
-      REJECTED: "bg-red-100 text-red-700",
-      CANCELLED: "bg-gray-100 text-gray-700",
-    };
-  }, []);
+  // ================= EXPORT PDF =================
+  const exportPDF = () => {
+    const doc = new jsPDF();
 
-  // ================= EMPTY STATE =================
-  const isEmpty = !loading && appointments.length === 0;
+    doc.text("Hospital Appointment Report", 14, 10);
+
+    const rows = appointments.map((a) => [
+      a.id,
+      a.user?.name,
+      a.doctor?.name,
+      a.date,
+      a.time,
+      a.status,
+      a.rejectionReason || "-",
+    ]);
+
+    doc.autoTable({
+      head: [["ID", "Patient", "Doctor", "Date", "Time", "Status", "Reason"]],
+      body: rows,
+    });
+
+    doc.save("hospital-report.pdf");
+  };
+
+  // ================= EXPORT EXCEL =================
+  const exportExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(
+      appointments.map((a) => ({
+        ID: a.id,
+        Patient: a.user?.name,
+        Doctor: a.doctor?.name,
+        Date: a.date,
+        Time: a.time,
+        Status: a.status,
+        RejectionReason: a.rejectionReason || "",
+      }))
+    );
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
+
+    XLSX.writeFile(workbook, "hospital-report.xlsx");
+  };
 
   return (
     <Layout>
       <div className="p-6 bg-gray-50 min-h-screen">
 
         {/* HEADER */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-800">
-            Appointment Management
-          </h1>
-          <p className="text-gray-500">
-            Admin control panel for all bookings
-          </p>
+        <div className="flex justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-bold">
+              Admin Reporting Dashboard
+            </h1>
+            <p className="text-gray-500">
+              Monitor system activity & generate reports
+            </p>
+          </div>
+
+          <div className="flex gap-2">
+            <button onClick={exportPDF} className="bg-red-600 text-white px-4 py-2 rounded">
+              Export PDF
+            </button>
+
+            <button onClick={exportExcel} className="bg-green-600 text-white px-4 py-2 rounded">
+              Export Excel
+            </button>
+          </div>
         </div>
 
         {/* ERROR */}
@@ -61,87 +112,63 @@ export default function ManageAppointments() {
           </div>
         )}
 
-        {/* LOADING STATE (SKELETON STYLE) */}
-        {loading && (
-          <div className="bg-white p-6 rounded-xl shadow animate-pulse">
-            Loading appointments...
+        {/* LOADING */}
+        {loading ? (
+          <div className="bg-white p-6 rounded shadow">
+            Loading system data...
           </div>
-        )}
-
-        {/* EMPTY STATE */}
-        {isEmpty && (
-          <div className="bg-white p-6 rounded-xl shadow text-gray-500">
-            No appointments found.
-          </div>
-        )}
-
-        {/* TABLE */}
-        {!loading && !isEmpty && (
-          <div className="bg-white shadow rounded-xl overflow-hidden">
+        ) : (
+          <div className="bg-white rounded-xl shadow overflow-hidden">
 
             <table className="w-full text-left">
 
-              {/* HEADER */}
-              <thead className="bg-gray-100 text-gray-600 text-sm">
+              <thead className="bg-gray-100">
                 <tr>
-                  <th className="p-3">ID</th>
                   <th className="p-3">Patient</th>
                   <th className="p-3">Doctor</th>
                   <th className="p-3">Date</th>
-                  <th className="p-3">Time</th>
                   <th className="p-3">Status</th>
+                  <th className="p-3">Doctor Notes</th>
                 </tr>
               </thead>
 
-              {/* BODY */}
               <tbody>
-                {appointments.map((app) => (
-                  <tr
-                    key={app.id}
-                    className="border-t hover:bg-gray-50 transition"
-                  >
+                {appointments.map((a) => (
+                  <tr key={a.id} className="border-t">
 
-                    {/* ID */}
                     <td className="p-3 font-medium">
-                      #{app.id}
+                      {a.user?.name}
                     </td>
 
-                    {/* USER */}
                     <td className="p-3">
-                      <div className="font-medium text-gray-800">
-                        {app.user?.name}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {app.user?.email}
-                      </div>
+                      {a.doctor?.name}
                     </td>
 
-                    {/* DOCTOR */}
                     <td className="p-3">
-                      <div className="font-medium text-gray-800">
-                        {app.doctor?.name}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {app.doctor?.specialization}
-                      </div>
+                      {a.date} {a.time}
                     </td>
 
-                    {/* DATE */}
-                    <td className="p-3">{app.date}</td>
-
-                    {/* TIME */}
-                    <td className="p-3">{app.time}</td>
-
-                    {/* STATUS */}
                     <td className="p-3">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          getStatusClass[app.status] ||
-                          "bg-gray-100 text-gray-600"
-                        }`}
-                      >
-                        {app.status}
+                      <span className={`px-2 py-1 text-xs rounded ${
+                        a.status === "APPROVED"
+                          ? "bg-green-100 text-green-700"
+                          : a.status === "REJECTED"
+                          ? "bg-red-100 text-red-700"
+                          : "bg-yellow-100 text-yellow-700"
+                      }`}>
+                        {a.status}
                       </span>
+                    </td>
+
+                    {/* IMPORTANT: REASON FROM DOCTOR */}
+                    <td className="p-3 text-sm text-gray-600">
+                      {a.rejectionReason ? (
+                        <span className="text-red-600">
+                          {a.rejectionReason}
+                        </span>
+                      ) : (
+                        "-"
+                      )}
                     </td>
 
                   </tr>

@@ -1,13 +1,21 @@
 import React, { useState } from "react";
 import Layout from "../../components/Layout";
-import { registerDoctor } from "../../services/doctorService";
+import { registerDoctor, registerAdmin } from "../../services/doctorService";
 
 export default function RegisterDoctor() {
-  const [form, setForm] = useState({
+  const [activeTab, setActiveTab] = useState("DOCTOR");
+
+  const [doctorForm, setDoctorForm] = useState({
     name: "",
     email: "",
     password: "",
     specialization: "",
+  });
+
+  const [adminForm, setAdminForm] = useState({
+    name: "",
+    email: "",
+    password: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -16,60 +24,79 @@ export default function RegisterDoctor() {
 
   const [showPassword, setShowPassword] = useState(false);
 
-  // ================= HANDLE CHANGE =================
-  const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
+  // ================= HANDLERS =================
+  const handleDoctorChange = (e) => {
+    setDoctorForm({ ...doctorForm, [e.target.name]: e.target.value });
+  };
+
+  const handleAdminChange = (e) => {
+    setAdminForm({ ...adminForm, [e.target.name]: e.target.value });
   };
 
   // ================= VALIDATION =================
-  const validate = () => {
-    if (!form.name || !form.email || !form.password || !form.specialization) {
-      setError("All fields are required");
+  const validateDoctor = () => {
+    if (!doctorForm.name || !doctorForm.email || !doctorForm.password || !doctorForm.specialization) {
+      setError("All doctor fields are required");
       return false;
     }
+    return true;
+  };
 
-    if (form.password.length < 6) {
-      setError("Password must be at least 6 characters");
+  const validateAdmin = () => {
+    if (!adminForm.name || !adminForm.email || !adminForm.password) {
+      setError("All admin fields are required");
       return false;
     }
-
     return true;
   };
 
   // ================= SUBMIT =================
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     setError("");
     setSuccess("");
-
-    if (!validate()) return;
-
     setLoading(true);
 
     try {
-      await registerDoctor(form);
+      if (activeTab === "DOCTOR") {
+        if (!validateDoctor()) {
+          setLoading(false);
+          return;
+        }
 
-      setSuccess("Doctor registered successfully 🎉");
+        await registerDoctor(doctorForm);
 
-      setForm({
-        name: "",
-        email: "",
-        password: "",
-        specialization: "",
-      });
+        setDoctorForm({
+          name: "",
+          email: "",
+          password: "",
+          specialization: "",
+        });
 
-      // auto clear success
-      setTimeout(() => setSuccess(""), 3000);
+        setSuccess("Doctor successfully registered");
+      }
+
+      if (activeTab === "ADMIN") {
+        if (!validateAdmin()) {
+          setLoading(false);
+          return;
+        }
+
+        await registerAdmin(adminForm);
+
+        setAdminForm({
+          name: "",
+          email: "",
+          password: "",
+        });
+
+        setSuccess("Administrator successfully created");
+      }
+
+      setTimeout(() => setSuccess(""), 4000);
 
     } catch (err) {
-      setError(
-        err?.response?.data?.message ||
-          "Failed to register doctor"
-      );
+      setError(err?.response?.data?.message || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -77,118 +104,210 @@ export default function RegisterDoctor() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gray-50 flex justify-center items-start p-6">
+      <div className="min-h-screen bg-gray-100 p-6">
 
-        <div className="w-full max-w-xl">
+        {/* HEADER */}
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-800">
+            Hospital Staff Management
+          </h1>
+          <p className="text-gray-500">
+            Securely register and manage hospital personnel
+          </p>
+        </div>
 
-          {/* HEADER */}
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-800">
-              Register Doctor
-            </h1>
-            <p className="text-gray-500">
-              Add medical professionals to the system
-            </p>
+        <div className="grid md:grid-cols-3 gap-6">
+
+          {/* LEFT PANEL */}
+          <div className="bg-gradient-to-br from-blue-700 to-blue-500 text-white p-6 rounded-2xl shadow-lg">
+            <h2 className="text-xl font-semibold mb-4">
+              Staff Roles Overview
+            </h2>
+
+            <div className="space-y-4 text-sm">
+
+              <div>
+                <p className="font-semibold">👨‍⚕️ Doctors</p>
+                <p className="text-blue-100">
+                  Manage patient care, consultations, and appointments.
+                </p>
+              </div>
+
+              <div>
+                <p className="font-semibold">🛡️ Administrators</p>
+                <p className="text-blue-100">
+                  Oversee system operations, users, and reporting.
+                </p>
+              </div>
+
+              <div className="pt-4 border-t border-blue-300 text-xs text-blue-100">
+                Enterprise-grade hospital system with role-based access control.
+              </div>
+
+            </div>
           </div>
 
-          {/* ERROR */}
-          {error && (
-            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">
-              {error}
-            </div>
-          )}
+          {/* RIGHT PANEL */}
+          <div className="md:col-span-2 bg-white rounded-2xl shadow-lg border">
 
-          {/* SUCCESS */}
-          {success && (
-            <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-lg">
-              {success}
-            </div>
-          )}
+            {/* TABS */}
+            <div className="flex border-b">
+              <button
+                onClick={() => setActiveTab("DOCTOR")}
+                className={`flex-1 p-4 font-semibold transition ${
+                  activeTab === "DOCTOR"
+                    ? "text-blue-600 border-b-2 border-blue-600"
+                    : "text-gray-500 hover:bg-gray-50"
+                }`}
+              >
+                Doctor Registration
+              </button>
 
-          {/* FORM */}
-          <form
-            onSubmit={handleSubmit}
-            className="bg-white shadow-xl rounded-2xl p-6 space-y-5"
-          >
-
-            {/* NAME */}
-            <div>
-              <label className="text-sm font-medium">Full Name</label>
-              <input
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                placeholder="Dr John Doe"
-                className="w-full mt-1 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
+              <button
+                onClick={() => setActiveTab("ADMIN")}
+                className={`flex-1 p-4 font-semibold transition ${
+                  activeTab === "ADMIN"
+                    ? "text-red-600 border-b-2 border-red-600"
+                    : "text-gray-500 hover:bg-gray-50"
+                }`}
+              >
+                Admin Registration
+              </button>
             </div>
 
-            {/* EMAIL */}
-            <div>
-              <label className="text-sm font-medium">Email</label>
-              <input
-                name="email"
-                type="email"
-                value={form.email}
-                onChange={handleChange}
-                placeholder="doctor@email.com"
-                className="w-full mt-1 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+            {/* FORM */}
+            <form onSubmit={handleSubmit} className="p-6 space-y-5">
 
-            {/* PASSWORD */}
-            <div>
-              <label className="text-sm font-medium">Password</label>
+              {/* ALERTS */}
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
+                  {error}
+                </div>
+              )}
 
-              <div className="relative">
-                <input
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  value={form.password}
-                  onChange={handleChange}
-                  placeholder="Enter password"
-                  className="w-full mt-1 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                />
+              {success && (
+                <div className="p-3 bg-green-50 border border-green-200 text-green-600 rounded-lg text-sm">
+                  {success}
+                </div>
+              )}
 
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-sm text-blue-600"
-                >
-                  {showPassword ? "Hide" : "Show"}
-                </button>
-              </div>
-            </div>
+              {/* DOCTOR FORM */}
+              {activeTab === "DOCTOR" && (
+                <>
+                  <Input label="Full Name" name="name" value={doctorForm.name} onChange={handleDoctorChange} />
+                  <Input label="Email Address" name="email" type="email" value={doctorForm.email} onChange={handleDoctorChange} />
+                  <PasswordInput
+                    label="Password"
+                    name="password"
+                    value={doctorForm.password}
+                    onChange={handleDoctorChange}
+                    show={showPassword}
+                    toggle={() => setShowPassword(!showPassword)}
+                  />
+                  <PasswordStrength password={doctorForm.password} />
+                  <Input label="Specialization" name="specialization" value={doctorForm.specialization} onChange={handleDoctorChange} />
+                </>
+              )}
 
-            {/* SPECIALIZATION */}
-            <div>
-              <label className="text-sm font-medium">Specialization</label>
-              <input
-                name="specialization"
-                value={form.specialization}
-                onChange={handleChange}
-                placeholder="Cardiology, Neurology..."
-                className="w-full mt-1 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+              {/* ADMIN FORM */}
+              {activeTab === "ADMIN" && (
+                <>
+                  <Input label="Full Name" name="name" value={adminForm.name} onChange={handleAdminChange} />
+                  <Input label="Email Address" name="email" type="email" value={adminForm.email} onChange={handleAdminChange} />
+                  <PasswordInput
+                    label="Password"
+                    name="password"
+                    value={adminForm.password}
+                    onChange={handleAdminChange}
+                    show={showPassword}
+                    toggle={() => setShowPassword(!showPassword)}
+                  />
+                  <PasswordStrength password={adminForm.password} />
+                </>
+              )}
 
-            {/* BUTTON */}
-            <button
-              type="submit"
-              disabled={loading}
-              className={`w-full p-3 rounded-lg text-white font-semibold transition
-                ${loading
-                  ? "bg-blue-300 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700"
-                }
-              `}
-            >
-              {loading ? "Registering..." : "Register Doctor"}
-            </button>
+              {/* SUBMIT */}
+              <button
+                type="submit"
+                disabled={loading}
+                className={`w-full py-3 rounded-lg text-white font-semibold transition ${
+                  loading
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : activeTab === "ADMIN"
+                    ? "bg-red-600 hover:bg-red-700"
+                    : "bg-blue-600 hover:bg-blue-700"
+                }`}
+              >
+                {loading ? "Processing..." : `Register ${activeTab}`}
+              </button>
 
-          </form>
+            </form>
+          </div>
         </div>
       </div>
     </Layout>
+  );
+}
+
+/* ================= INPUT ================= */
+function Input({ label, ...props }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700">
+        {label}
+      </label>
+      <input
+        {...props}
+        className="w-full mt-1 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+      />
+    </div>
+  );
+}
+
+/* ================= PASSWORD INPUT ================= */
+function PasswordInput({ label, show, toggle, ...props }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700">
+        {label}
+      </label>
+      <div className="relative mt-1">
+        <input
+          {...props}
+          type={show ? "text" : "password"}
+          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+        />
+        <button
+          type="button"
+          onClick={toggle}
+          className="absolute right-3 top-3 text-sm text-blue-600"
+        >
+          {show ? "Hide" : "Show"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ================= PASSWORD STRENGTH ================= */
+function PasswordStrength({ password }) {
+  if (!password) return null;
+
+  let strength = "Weak";
+  let color = "text-red-500";
+
+  if (password.length >= 6) {
+    strength = "Medium";
+    color = "text-yellow-500";
+  }
+  if (password.length >= 10) {
+    strength = "Strong";
+    color = "text-green-600";
+  }
+
+  return (
+    <p className={`text-xs mt-1 ${color}`}>
+      Password strength: {strength}
+    </p>
   );
 }

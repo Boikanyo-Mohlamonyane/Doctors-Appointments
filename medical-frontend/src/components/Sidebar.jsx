@@ -12,7 +12,7 @@ export default function Sidebar() {
     ADMIN: [
       { name: "Dashboard", path: "/admin/dashboard", icon: Home },
       { name: "Users", path: "/admin/users", icon: Users },
-      { name: "Doctors", path: "/admin/register", icon: Stethoscope },
+      { name: "Registrations", path: "/admin/register", icon: Stethoscope },
       { name: "Appointments", path: "/admin/appointments", icon: Calendar },
     ],
     DOCTOR: [

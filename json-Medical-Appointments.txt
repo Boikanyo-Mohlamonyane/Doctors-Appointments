@@ -1,0 +1,61 @@
+http://localhost:8080/api/auth/login
+{
+"email":"admin@system.com",
+"password":"admin123"
+}
+
+
+
+endpoint for adding Doctors
+
+Swagger-http://localhost:8080/swagger-ui/index.html
+
+http://localhost:8080/api/admin/doctors
+
+{
+  "name": "Dr Sarah Mokoena",
+  "email": "sarah.mokoena@example.com",
+  "password": "StrongPass456",
+  "specialization": "Dermatology"
+}
+{
+  "name": "Dr Thabo Nkosi",
+  "email": "thabo.nkosi@example.com",
+  "password": "Password123",
+  "specialization": "Cardiology"
+}
+{
+  "name": "Dr Lerato Dlamini",
+  "email": "lerato.dlamini@example.com",
+  "password": "SecurePass789",
+  "specialization": "Pediatrics"
+}
+{
+  "name": "Dr Michael Peterson",
+  "email": "michael.peterson@example.com",
+  "password": "MyPass456",
+  "specialization": "Neurology"
+}
+
+new USers
+
+{
+  "name": "Alice Johnson",
+  "email": "alice.johnson@example.com",
+  "password": "Password@123"
+}
+
+
+Creating new Appointments
+{
+  "doctorId": 1,
+  "date": "2026-04-20",
+  "time": "10:30"
+}
+
+
+{
+  "doctorId": 2,
+  "date": "2026-04-22",
+  "time": "14:00"
+}

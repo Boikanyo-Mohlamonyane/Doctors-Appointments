@@ -1,14 +1,20 @@
 package com.example.Medical_Appointments.controller;
 
 import com.example.Medical_Appointments.dto.AppointmentRequest;
+import com.example.Medical_Appointments.dto.RejectRequest;
+import com.example.Medical_Appointments.dto.RescheduleRequest;
 import com.example.Medical_Appointments.model.Appointment;
 import com.example.Medical_Appointments.service.AppointmentService;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -51,10 +57,39 @@ public class AppointmentController {
         return service.approve(id);
     }
 
-    // 🩺 DOCTOR → REJECT
     @PutMapping("/reject/{id}")
     @PreAuthorize("hasAuthority('DOCTOR')")
-    public Appointment reject(@PathVariable Long id) {
-        return service.reject(id);
+    public Appointment reject(
+            @PathVariable Long id,
+            @RequestBody RejectRequest request,
+            Principal principal
+    ) {
+        return service.reject(
+                id,
+                request.getReason(), // OR request.getReason()
+                principal.getName()
+        );
+    }
+    // ================= DELETE APPOINTMENT =================
+    @DeleteMapping("/user/{appID}")
+    @PreAuthorize("hasAuthority('USER')")
+    public ResponseEntity<String> deleteAppointment(@PathVariable Long appID) {
+
+        service.deleteAppointment(appID);
+
+        return ResponseEntity.ok("Appointment deleted successfully");
+    }
+
+    // ================= RESCHEDULE ENDPOINT =================
+    @PutMapping("/reschedule/{id}")
+    @PreAuthorize("hasAuthority('USER')")
+    public ResponseEntity<Appointment> rescheduleAppointment(
+            @PathVariable Long id,
+            @RequestBody RescheduleRequest request
+    ) {
+
+        Appointment updated = service.rescheduleAppointment(id, request);
+
+        return ResponseEntity.ok(updated);
     }
 }

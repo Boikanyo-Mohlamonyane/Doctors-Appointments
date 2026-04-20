@@ -8,6 +8,7 @@ import com.example.Medical_Appointments.service.AdminService;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,6 +36,7 @@ public class AdminController {
     public Doctor addDoctor(@RequestBody DoctorRequest request) {
         return service.addDoctor(request, request.getSpecialization());
     }
+
 
     @GetMapping("/doctors")
     public List<Doctor> getDoctors() {
