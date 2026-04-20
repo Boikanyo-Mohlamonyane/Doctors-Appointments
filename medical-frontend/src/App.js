@@ -9,6 +9,7 @@ import ManageAppointments from "./pages/admin/ManageAppointments";
 import ProtectedRoute from "./components/ProtectedRoute";
 import RegisterDoctor from "./pages/admin/RegisterDoctor";
 import MyAppointments from "./pages/user/MyAppointments";
+import Register from "./pages/Register";
 import { useEffect } from "react";
 import { isTokenExpired, logout } from "./utils/auth";
 
@@ -34,6 +35,7 @@ function App() {
 
         {/* PUBLIC ROUTE */}
         <Route path="/" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
         {/* USER ROUTE */}
         <Route
