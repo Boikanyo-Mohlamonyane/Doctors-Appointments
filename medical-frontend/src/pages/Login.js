@@ -215,7 +215,7 @@ function RegisterPopup({ setShowRegister }) {
     setMessage("");
 
     try {
-      const res = await fetch("http://localhost:8080/api/auth/register", {
+      const res = await fetch("http://108.131.12.180:8080/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
@@ -223,7 +223,7 @@ function RegisterPopup({ setShowRegister }) {
 
       if (!res.ok) throw new Error("Registration failed");
 
-      const loginRes = await fetch("http://localhost:8080/api/auth/login", {
+      const loginRes = await fetch("http://108.131.12.180:8080/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)

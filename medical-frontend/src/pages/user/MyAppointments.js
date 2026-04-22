@@ -6,7 +6,7 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 
-const API = "http://localhost:8080/api/appointments";
+const API =   process.env.REACT_APP_API_URL || "http://localhost:8080/api/appointments";
 
 export default function MyAppointments() {
   const [appointments, setAppointments] = useState([]);

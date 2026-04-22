@@ -12,7 +12,7 @@ export default function DoctorDashboard() {
   const [rejectReason, setRejectReason] = useState("");
 
   const token = localStorage.getItem("token");
-  const API = "http://localhost:8080/api";
+  const API =   process.env.REACT_APP_API_URL || "http://localhost:8080/api";
 
   // ================= FETCH =================
   const fetchAppointments = useCallback(async () => {

@@ -22,7 +22,7 @@ export default function AdminDashboard() {
         setLoading(true);
 
         const res = await axios.get(
-          "http://localhost:8080/api/admin/users",
+            process.env.REACT_APP_API_URL || "http://localhost:8080/api/admin/users",
           {
             headers: { Authorization: `Bearer ${token}` },
           }

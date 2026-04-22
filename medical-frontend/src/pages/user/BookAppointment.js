@@ -24,7 +24,7 @@ export default function UserDashboard() {
         setLoadingDoctors(true);
 
         const res = await axios.get(
-          "http://localhost:8080/api/admin/doctors",
+          process.env.REACT_APP_API_URL || "http://localhost:8080/api/admin/doctors",
           {
             headers: {
               Authorization: `Bearer ${token}`,
