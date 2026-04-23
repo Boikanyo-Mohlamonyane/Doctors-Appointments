@@ -24,12 +24,13 @@ export default function UserDashboard() {
         setLoadingDoctors(true);
 
         const res = await axios.get(
-          process.env.REACT_APP_API_URL || "http://localhost:8080/api/admin/doctors",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+            process.env.REACT_APP_API_URL ||
+            "http://63.33.171.154:8080/api/admin/doctors",
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
         );
 
         setDoctors(res.data);
@@ -53,22 +54,21 @@ export default function UserDashboard() {
 
     try {
       const res = await axios.post(
-        "http://localhost:8080/api/appointments",
-        {
-          doctorId: Number(doctorId),
-          date,
-          time,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
+          "http://63.33.171.154:8080/api/appointments",
+          {
+            doctorId: Number(doctorId),
+            date,
+            time,
           },
-        }
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
       );
 
       setSuccess(res.data);
 
-      // reset form
       setDoctorId("");
       setDate("");
       setTime("");
@@ -80,107 +80,110 @@ export default function UserDashboard() {
   };
 
   return (
-    <Layout>
-      <div className="p-6 max-w-xl">
+      <Layout>
+        {/* PAGE WRAPPER */}
+        <div className="p-4 sm:p-6 flex justify-center">
 
-        {/* HEADER */}
-        <h1 className="text-2xl font-bold text-gray-800">
-          Book Appointment
-        </h1>
+          <div className="w-full max-w-2xl">
 
-        <p className="text-gray-500 text-sm mb-4">
-          Choose a doctor and schedule your appointment
-        </p>
+            {/* HEADER */}
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
+              Book Appointment
+            </h1>
 
-        {/* ERROR */}
-        {error && (
-          <div className="bg-red-100 text-red-600 p-3 rounded mb-3">
-            {error}
-          </div>
-        )}
+            <p className="text-gray-500 text-sm mb-4">
+              Choose a doctor and schedule your appointment
+            </p>
 
-        {/* SUCCESS */}
-        {success && (
-          <div className="bg-green-100 text-green-700 p-3 rounded mb-3">
-            Appointment booked successfully 🎉
-            <div className="text-sm mt-1">
-              ID: {success.id} | Status: {success.status}
-            </div>
-          </div>
-        )}
-
-        {/* FORM */}
-        <form
-          onSubmit={handleBooking}
-          className="bg-white p-6 rounded-xl shadow space-y-4"
-        >
-
-          {/* DOCTOR DROPDOWN */}
-          <div>
-            <label className="text-sm text-gray-600">
-              Select Doctor
-            </label>
-
-            <select
-              value={doctorId}
-              onChange={(e) => setDoctorId(e.target.value)}
-              className="w-full border p-2 rounded mt-1"
-              required
-            >
-              <option value="">-- Choose a Doctor --</option>
-
-              {loadingDoctors ? (
-                <option>Loading doctors...</option>
-              ) : (
-                doctors.map((doc) => (
-                  <option key={doc.id} value={doc.id}>
-                    {doc.name} ({doc.specialization})
-                  </option>
-                ))
-              )}
-            </select>
-          </div>
-
-          {/* DATE */}
-          <div>
-            <label className="text-sm text-gray-600">Date</label>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="w-full border p-2 rounded mt-1"
-              required
-            />
-          </div>
-
-          {/* TIME */}
-          <div>
-            <label className="text-sm text-gray-600">Time</label>
-            <input
-              type="time"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-              className="w-full border p-2 rounded mt-1"
-              required
-            />
-          </div>
-
-          {/* BUTTON */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 flex items-center justify-center"
-          >
-            {loading ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            ) : (
-              "Book Appointment"
+            {/* ERROR */}
+            {error && (
+                <div className="bg-red-100 text-red-600 p-3 rounded mb-3 text-sm">
+                  {error}
+                </div>
             )}
-          </button>
 
-        </form>
+            {/* SUCCESS */}
+            {success && (
+                <div className="bg-green-100 text-green-700 p-3 rounded mb-3 text-sm">
+                  Appointment booked successfully 🎉
+                  <div className="text-xs mt-1">
+                    ID: {success.id} | Status: {success.status}
+                  </div>
+                </div>
+            )}
 
-      </div>
-    </Layout>
+            {/* FORM */}
+            <form
+                onSubmit={handleBooking}
+                className="bg-white p-4 sm:p-6 rounded-xl shadow-md space-y-4"
+            >
+
+              {/* DOCTOR */}
+              <div>
+                <label className="text-sm text-gray-600">
+                  Select Doctor
+                </label>
+
+                <select
+                    value={doctorId}
+                    onChange={(e) => setDoctorId(e.target.value)}
+                    className="w-full border p-3 rounded mt-1 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                >
+                  <option value="">-- Choose a Doctor --</option>
+
+                  {loadingDoctors ? (
+                      <option>Loading doctors...</option>
+                  ) : (
+                      doctors.map((doc) => (
+                          <option key={doc.id} value={doc.id}>
+                            {doc.name} ({doc.specialization})
+                          </option>
+                      ))
+                  )}
+                </select>
+              </div>
+
+              {/* DATE */}
+              <div>
+                <label className="text-sm text-gray-600">Date</label>
+                <input
+                    type="date"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    className="w-full border p-3 rounded mt-1 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                />
+              </div>
+
+              {/* TIME */}
+              <div>
+                <label className="text-sm text-gray-600">Time</label>
+                <input
+                    type="time"
+                    value={time}
+                    onChange={(e) => setTime(e.target.value)}
+                    className="w-full border p-3 rounded mt-1 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                />
+              </div>
+
+              {/* BUTTON */}
+              <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-blue-600 text-white p-3 rounded hover:bg-blue-700 transition flex items-center justify-center text-sm sm:text-base"
+              >
+                {loading ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                    "Book Appointment"
+                )}
+              </button>
+
+            </form>
+          </div>
+        </div>
+      </Layout>
   );
 }

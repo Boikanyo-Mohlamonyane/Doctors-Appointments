@@ -26,7 +26,7 @@ export default function Register() {
 
     try {
       // 🔹 REGISTER
-      const res = await fetch("http://108.131.12.180:8080/api/auth/register", {
+      const res = await fetch("http://63.33.171.154:8080/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
@@ -35,7 +35,7 @@ export default function Register() {
       if (!res.ok) throw new Error("Registration failed");
 
       // 🔹 AUTO LOGIN
-      const loginRes = await fetch("http://108.131.12.180:8080/api/auth/login", {
+      const loginRes = await fetch("http://63.33.171.154:8080/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

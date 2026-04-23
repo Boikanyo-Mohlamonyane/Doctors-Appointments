@@ -44,7 +44,7 @@ export default function MyAppointments() {
     try {
       const userId = localStorage.getItem("userId");
 
-      await fetch(`http://localhost:8080/api/appointments/user/${userId}`, {
+      await fetch(`http://63.33.171.154:8080/api/appointments/user/${userId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,

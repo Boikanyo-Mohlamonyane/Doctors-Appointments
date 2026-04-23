@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API = "http://localhost:8080/api/admin/users";
+const API = "http://63.33.171.154:8080/api/admin/users";
 
 const authHeader = () => ({
   headers: {

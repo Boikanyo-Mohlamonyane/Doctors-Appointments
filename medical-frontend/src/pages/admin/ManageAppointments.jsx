@@ -5,7 +5,7 @@ import * as XLSX from "xlsx";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 
-const API =   process.env.REACT_APP_API_URL || "http://localhost:8080/api/appointments";
+const API =   process.env.REACT_APP_API_URL || "http://63.33.171.154:8080/api/appointments";
 
 export default function AdminDashboard() {
   const [appointments, setAppointments] = useState([]);

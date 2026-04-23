@@ -30,7 +30,6 @@ export default function Login() {
       if (role === "ADMIN") navigate("/admin/dashboard");
       else if (role === "DOCTOR") navigate("/doctor/dashboard");
       else navigate("/user/dashboard");
-
     } catch (err) {
       setError("Invalid credentials. Please try again.");
     } finally {
@@ -39,168 +38,156 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-slate-50 to-slate-200">
+      <div className="min-h-screen flex flex-col lg:flex-row bg-gradient-to-br from-slate-50 to-slate-200">
 
-      {/* ================= LEFT BRAND PANEL ================= */}
-      <div className="hidden lg:flex w-1/2 relative overflow-hidden">
+        {/* ================= LEFT PANEL ================= */}
+        <div className="hidden lg:flex w-1/2 relative overflow-hidden">
+          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1580281657527-47f249e8f4d1')] bg-cover bg-center" />
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-900/90 to-slate-900/90" />
 
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1580281657527-47f249e8f4d1')] bg-cover bg-center" />
+          <div className="relative z-10 flex flex-col justify-center px-10 xl:px-16 text-white">
+            <h1 className="text-4xl xl:text-5xl font-bold leading-tight">
+              Philadelphia Hospital
+            </h1>
 
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/90 to-slate-900/90" />
-
-        <div className="relative z-10 flex flex-col justify-center px-16 text-white">
-
-          <h1 className="text-5xl font-bold leading-tight">
-            Philadelphia Hospital
-          </h1>
-
-          <p className="mt-4 text-blue-100 text-lg">
-            Advanced Medical Appointment & Patient Management System
-          </p>
-
-          <div className="mt-10 space-y-3 text-sm text-blue-100">
-            <p>✔ Secure patient records</p>
-            <p>✔ Doctor scheduling automation</p>
-            <p>✔ Real-time appointment tracking</p>
-            <p>✔ Enterprise healthcare security</p>
-          </div>
-
-          <div className="mt-12 text-xs text-blue-200">
-            © {new Date().getFullYear()} Philadelphia Hospital System
-          </div>
-
-        </div>
-      </div>
-
-      {/* ================= LOGIN PANEL ================= */}
-      <div className="flex w-full lg:w-1/2 items-center justify-center p-6">
-
-        <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-gray-100 p-10">
-
-          {/* HEADER */}
-          <div className="text-center mb-8">
-
-            <div className="mx-auto w-14 h-14 bg-blue-600 text-white rounded-2xl flex items-center justify-center text-xl font-bold shadow-lg">
-              PH
-            </div>
-
-            <h2 className="text-3xl font-bold mt-4 text-gray-800">
-              Welcome Back
-            </h2>
-
-            <p className="text-sm text-gray-500 mt-1">
-              Sign in to Philadelphia Hospital System
+            <p className="mt-4 text-blue-100 text-base xl:text-lg">
+              Advanced Medical Appointment & Patient Management System
             </p>
 
+            <div className="mt-10 space-y-2 text-sm text-blue-100">
+              <p>✔ Secure patient records</p>
+              <p>✔ Doctor scheduling automation</p>
+              <p>✔ Real-time appointment tracking</p>
+              <p>✔ Enterprise healthcare security</p>
+            </div>
+
+            <div className="mt-10 text-xs text-blue-200">
+              © {new Date().getFullYear()} Philadelphia Hospital System
+            </div>
           </div>
+        </div>
 
-          {/* ERROR */}
-          {error && (
-            <div className="mb-5 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl text-center">
-              {error}
-            </div>
-          )}
+        {/* ================= LOGIN PANEL ================= */}
+        <div className="flex w-full lg:w-1/2 items-center justify-center p-4 sm:p-6">
 
-          {/* FORM */}
-          <form onSubmit={handleLogin} className="space-y-5">
+          <div className="w-full max-w-md bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-gray-100 p-6 sm:p-8 md:p-10">
 
-            {/* EMAIL */}
-            <div>
-              <label className="text-sm text-gray-600">Email Address</label>
-              <input
-                type="email"
-                placeholder="doctor@philadelphiahospital.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full mt-1 p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-                required
-              />
-            </div>
+            {/* HEADER */}
+            <div className="text-center mb-6 sm:mb-8">
 
-            {/* PASSWORD */}
-            <div>
-              <label className="text-sm text-gray-600">Password</label>
-
-              <div className="relative mt-1">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-                  required
-                />
-
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-xs text-blue-600 font-medium"
-                >
-                  {showPassword ? "Hide" : "Show"}
-                </button>
+              <div className="mx-auto w-12 h-12 sm:w-14 sm:h-14 bg-blue-600 text-white rounded-2xl flex items-center justify-center text-lg sm:text-xl font-bold shadow-lg">
+                PH
               </div>
+
+              <h2 className="text-2xl sm:text-3xl font-bold mt-4 text-gray-800">
+                Welcome Back
+              </h2>
+
+              <p className="text-sm text-gray-500 mt-1">
+                Sign in to your account
+              </p>
             </div>
 
-            {/* LOGIN BUTTON */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md transition-all"
-            >
-              {loading ? "Authenticating..." : "Sign In"}
-            </button>
+            {/* ERROR */}
+            {error && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl text-center">
+                  {error}
+                </div>
+            )}
 
-          </form>
+            {/* FORM */}
+            <form onSubmit={handleLogin} className="space-y-4 sm:space-y-5">
 
-          {/* LINKS */}
-          <div className="mt-6 text-center text-sm text-gray-500">
+              {/* EMAIL */}
+              <div>
+                <label className="text-sm text-gray-600">Email Address</label>
+                <input
+                    type="email"
+                    placeholder="doctor@hospital.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full mt-1 p-3 border rounded-xl text-sm sm:text-base focus:ring-2 focus:ring-blue-500 outline-none"
+                    required
+                />
+              </div>
 
-            <p>
-              Don’t have an account?{" "}
-              <span
-                onClick={() => setShowRegister(true)}
-                className="text-blue-600 font-medium cursor-pointer hover:underline"
+              {/* PASSWORD */}
+              <div>
+                <label className="text-sm text-gray-600">Password</label>
+
+                <div className="relative mt-1">
+                  <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full p-3 border rounded-xl text-sm sm:text-base focus:ring-2 focus:ring-blue-500 outline-none"
+                      required
+                  />
+
+                  <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-3 text-xs text-blue-600 font-medium"
+                  >
+                    {showPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
+              </div>
+
+              {/* BUTTON */}
+              <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md transition-all text-sm sm:text-base"
               >
+                {loading ? "Authenticating..." : "Sign In"}
+              </button>
+            </form>
+
+            {/* REGISTER */}
+            <div className="mt-6 text-center text-sm text-gray-500">
+              <p>
+                Don’t have an account?{" "}
+                <span
+                    onClick={() => setShowRegister(true)}
+                    className="text-blue-600 font-medium cursor-pointer hover:underline"
+                >
                 Create account
               </span>
-            </p>
-
+              </p>
+            </div>
           </div>
-
         </div>
+
+        {/* ================= REGISTER MODAL ================= */}
+        {showRegister && (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+
+              <div className="bg-white w-full max-w-md rounded-2xl sm:rounded-3xl shadow-2xl p-5 sm:p-6 relative">
+
+                <button
+                    onClick={() => setShowRegister(false)}
+                    className="absolute top-3 right-3 text-gray-400 hover:text-red-500 text-xl"
+                >
+                  ✕
+                </button>
+
+                <RegisterPopup setShowRegister={setShowRegister} />
+              </div>
+
+            </div>
+        )}
       </div>
-
-      {/* ================= REGISTER MODAL ================= */}
-      {showRegister && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-
-          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl p-6 relative">
-
-            <button
-              onClick={() => setShowRegister(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-red-500 text-lg"
-            >
-              ✕
-            </button>
-
-            <RegisterPopup setShowRegister={setShowRegister} />
-
-          </div>
-
-        </div>
-      )}
-
-    </div>
   );
 }
 
 /* ================= REGISTER POPUP ================= */
 function RegisterPopup({ setShowRegister }) {
-
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    password: ""
+    password: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -215,30 +202,19 @@ function RegisterPopup({ setShowRegister }) {
     setMessage("");
 
     try {
-      const res = await fetch("http://108.131.12.180:8080/api/auth/register", {
+      const res = await fetch("http://63.33.171.154:8080/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData),
       });
 
       if (!res.ok) throw new Error("Registration failed");
 
-      const loginRes = await fetch("http://108.131.12.180:8080/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData)
-      });
-
-      const loginData = await loginRes.json();
-
-      localStorage.setItem("token", loginData.token);
-
-      setMessage("Account created successfully");
+      setMessage("Account created successfully 🎉");
 
       setTimeout(() => {
         setShowRegister(false);
       }, 1200);
-
     } catch (err) {
       setMessage(err.message);
     } finally {
@@ -247,48 +223,46 @@ function RegisterPopup({ setShowRegister }) {
   };
 
   return (
-    <div>
+      <div>
+        <h2 className="text-xl sm:text-2xl font-bold text-center text-gray-800 mb-5">
+          Create Account
+        </h2>
 
-      <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
-        Create Patient Account
-      </h2>
+        {message && (
+            <p className="text-center text-sm text-blue-600 mb-3">
+              {message}
+            </p>
+        )}
 
-      {message && (
-        <p className="text-center text-sm text-blue-600 mb-3">
-          {message}
-        </p>
-      )}
+        <input
+            name="name"
+            placeholder="Full Name"
+            onChange={handleChange}
+            className="w-full p-3 mb-3 border rounded-xl text-sm sm:text-base"
+        />
 
-      <input
-        name="name"
-        placeholder="Full Name"
-        onChange={handleChange}
-        className="w-full p-3 mb-3 border rounded-xl"
-      />
+        <input
+            name="email"
+            placeholder="Email Address"
+            onChange={handleChange}
+            className="w-full p-3 mb-3 border rounded-xl text-sm sm:text-base"
+        />
 
-      <input
-        name="email"
-        placeholder="Email Address"
-        onChange={handleChange}
-        className="w-full p-3 mb-3 border rounded-xl"
-      />
+        <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            onChange={handleChange}
+            className="w-full p-3 mb-4 border rounded-xl text-sm sm:text-base"
+        />
 
-      <input
-        type="password"
-        name="password"
-        placeholder="Password"
-        onChange={handleChange}
-        className="w-full p-3 mb-5 border rounded-xl"
-      />
-
-      <button
-        onClick={handleRegister}
-        disabled={loading}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold"
-      >
-        {loading ? "Creating Account..." : "Create Account"}
-      </button>
-
-    </div>
+        <button
+            onClick={handleRegister}
+            disabled={loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold text-sm sm:text-base"
+        >
+          {loading ? "Creating..." : "Create Account"}
+        </button>
+      </div>
   );
 }
