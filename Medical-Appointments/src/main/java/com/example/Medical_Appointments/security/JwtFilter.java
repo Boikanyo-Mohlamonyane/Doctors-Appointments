@@ -6,7 +6,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -29,21 +28,19 @@ public class JwtFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        // ✅ 0. ALLOW CORS PREFLIGHT REQUESTS
+        // ✅ ALLOW PRE-FLIGHT REQUESTS
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             response.setStatus(HttpServletResponse.SC_OK);
-            filterChain.doFilter(request, response);
             return;
         }
 
         String path = request.getServletPath();
 
-        // 🔓 1. SKIP PUBLIC ENDPOINTS
+        // 🔓 Public endpoints skip JWT
         if (path.startsWith("/api/auth")
                 || path.startsWith("/h2-console")
                 || path.startsWith("/v3/api-docs")
-                || path.startsWith("/swagger-ui")
-                || path.startsWith("/swagger-ui.html")) {
+                || path.startsWith("/swagger-ui")) {
 
             filterChain.doFilter(request, response);
             return;
@@ -51,7 +48,6 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        // 🔓 2. NO TOKEN → JUST CONTINUE
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -61,17 +57,14 @@ public class JwtFilter extends OncePerRequestFilter {
 
         try {
 
-            // ✔ 3. VALIDATE TOKEN
             if (!jwtUtil.validateToken(token)) {
                 filterChain.doFilter(request, response);
                 return;
             }
 
-            // ✔ 4. EXTRACT DATA
             String email = jwtUtil.extractEmail(token);
             String role = jwtUtil.extractRole(token);
 
-            // ✔ 5. SET AUTH
             if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
                 UsernamePasswordAuthenticationToken auth =
@@ -89,7 +82,6 @@ public class JwtFilter extends OncePerRequestFilter {
             }
 
         } catch (Exception e) {
-            // ❌ DO NOT BLOCK
             filterChain.doFilter(request, response);
             return;
         }
