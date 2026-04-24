@@ -29,6 +29,13 @@ public class JwtFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
+        // ✅ 0. ALLOW CORS PREFLIGHT REQUESTS
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            response.setStatus(HttpServletResponse.SC_OK);
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String path = request.getServletPath();
 
         // 🔓 1. SKIP PUBLIC ENDPOINTS
@@ -44,7 +51,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        // 🔓 2. NO TOKEN → JUST CONTINUE (DO NOT BLOCK)
+        // 🔓 2. NO TOKEN → JUST CONTINUE
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -54,24 +61,24 @@ public class JwtFilter extends OncePerRequestFilter {
 
         try {
 
-            // ✔ 3. VALIDATE TOKEN FIRST
+            // ✔ 3. VALIDATE TOKEN
             if (!jwtUtil.validateToken(token)) {
                 filterChain.doFilter(request, response);
                 return;
             }
 
-            // ✔ 4. EXTRACT DATA FROM TOKEN
+            // ✔ 4. EXTRACT DATA
             String email = jwtUtil.extractEmail(token);
             String role = jwtUtil.extractRole(token);
 
-            // ✔ 5. SET AUTHENTICATION
+            // ✔ 5. SET AUTH
             if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
                 UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(
                                 email,
                                 null,
-                                List.of(new SimpleGrantedAuthority(role)) // 🔥 IMPORTANT
+                                List.of(new SimpleGrantedAuthority(role))
                         );
 
                 auth.setDetails(
@@ -82,7 +89,7 @@ public class JwtFilter extends OncePerRequestFilter {
             }
 
         } catch (Exception e) {
-            // ❌ DO NOT BLOCK REQUEST — JUST CONTINUE
+            // ❌ DO NOT BLOCK
             filterChain.doFilter(request, response);
             return;
         }
