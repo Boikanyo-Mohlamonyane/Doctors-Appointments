@@ -10,26 +10,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # ---------------- CHECKOUT ----------------
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Login to Docker Hub (more reliable method)
+      # ---------------- DOCKER LOGIN ----------------
       - name: Docker Login
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      # Build & push backend
-      - name: Build Backend
+      # ---------------- BACKEND BUILD ----------------
+      - name: Build Backend (Clean Cache)
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/medical-backend:latest ./Medical-Appointments
+          docker build --no-cache \
+            -t ${{ secrets.DOCKER_USERNAME }}/medical-backend:latest \
+            ./Medical-Appointments
+
           docker push ${{ secrets.DOCKER_USERNAME }}/medical-backend:latest
 
-      # Build & push frontend
-      - name: Build Frontend
+      # ---------------- FRONTEND BUILD ----------------
+      - name: Build Frontend (Clean Cache)
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/medical-frontend:latest ./medical-frontend
+          docker build --no-cache \
+            -t ${{ secrets.DOCKER_USERNAME }}/medical-frontend:latest \
+            ./medical-frontend
+
           docker push ${{ secrets.DOCKER_USERNAME }}/medical-frontend:latest
 
-      # Deploy to EC2
+      # ---------------- DEPLOY TO EC2 ----------------
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -37,17 +44,31 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+
+            echo "Stopping old containers..."
+
+            docker rm -f backend || true
+            docker rm -f frontend || true
+
+            echo "Pulling latest images..."
+
             docker pull ${{ secrets.DOCKER_USERNAME }}/medical-backend:latest
             docker pull ${{ secrets.DOCKER_USERNAME }}/medical-frontend:latest
 
-            docker stop backend || true
-            docker stop frontend || true
+            echo "Starting backend..."
 
-            docker rm backend || true
-            docker rm frontend || true
+            docker run -d \
+              --restart always \
+              --name backend \
+              -p 8080:8080 \
+              ${{ secrets.DOCKER_USERNAME }}/medical-backend:latest
 
-            # Backend (Spring Boot)
-            docker run -d --restart always --name backend -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/medical-backend:latest
+            echo "Starting frontend..."
 
-            # Frontend (React + Nginx)
-            docker run -d --restart always --name frontend -p 3000:80 ${{ secrets.DOCKER_USERNAME }}/medical-frontend:latest
+            docker run -d \
+              --restart always \
+              --name frontend \
+              -p 3000:80 \
+              ${{ secrets.DOCKER_USERNAME }}/medical-frontend:latest
+
+            echo "Deployment complete!"
