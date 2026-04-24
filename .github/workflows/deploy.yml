@@ -20,13 +20,13 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # Build & push backend (Medical-Appointments)
+      # Build & push backend
       - name: Build Backend
         run: |
           docker build -t ${{ secrets.DOCKER_USERNAME }}/medical-backend:latest ./Medical-Appointments
           docker push ${{ secrets.DOCKER_USERNAME }}/medical-backend:latest
 
-      # Build & push frontend (medical-frontend)
+      # Build & push frontend
       - name: Build Frontend
         run: |
           docker build -t ${{ secrets.DOCKER_USERNAME }}/medical-frontend:latest ./medical-frontend
@@ -49,5 +49,8 @@ jobs:
             docker rm backend || true
             docker rm frontend || true
 
-            docker run -d --name backend -p 5000:5000 ${{ secrets.DOCKER_USERNAME }}/medical-backend:latest
+            # ✅ FIXED PORT (8080)
+            docker run -d --name backend -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/medical-backend:latest
+
+            # frontend is correct (nginx → port 80)
             docker run -d --name frontend -p 3000:80 ${{ secrets.DOCKER_USERNAME }}/medical-frontend:latest
