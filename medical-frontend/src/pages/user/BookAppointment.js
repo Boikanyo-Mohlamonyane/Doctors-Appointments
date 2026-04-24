@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../services/api";
 import Layout from "../../components/Layout";
 
 export default function UserDashboard() {
+
   const [doctors, setDoctors] = useState([]);
   const [doctorId, setDoctorId] = useState("");
-
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
 
@@ -15,34 +15,27 @@ export default function UserDashboard() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(null);
 
-  const token = localStorage.getItem("token");
-
   // ================= FETCH DOCTORS =================
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
         setLoadingDoctors(true);
 
-        const res = await axios.get(
-            process.env.REACT_APP_API_URL ||
-            "http://63.33.171.154:8080/api/admin/doctors",
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-        );
+        const res = await api.get("/admin/doctors");
 
         setDoctors(res.data);
+
       } catch (err) {
-        setError("Failed to load doctors");
+        setError(
+            err.response?.data?.message || "Failed to load doctors"
+        );
       } finally {
         setLoadingDoctors(false);
       }
     };
 
     fetchDoctors();
-  }, [token]);
+  }, []);
 
   // ================= BOOK APPOINTMENT =================
   const handleBooking = async (e) => {
@@ -53,27 +46,22 @@ export default function UserDashboard() {
     setSuccess(null);
 
     try {
-      const res = await axios.post(
-          "http://63.33.171.154:8080/api/appointments",
-          {
-            doctorId: Number(doctorId),
-            date,
-            time,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-      );
+      const res = await api.post("/appointments", {
+        doctorId: Number(doctorId),
+        date,
+        time,
+      });
 
       setSuccess(res.data);
 
       setDoctorId("");
       setDate("");
       setTime("");
+
     } catch (err) {
-      setError("Failed to book appointment");
+      setError(
+          err.response?.data?.message || "Failed to book appointment"
+      );
     } finally {
       setLoading(false);
     }
@@ -81,7 +69,6 @@ export default function UserDashboard() {
 
   return (
       <Layout>
-        {/* PAGE WRAPPER */}
         <div className="p-4 sm:p-6 flex justify-center">
 
           <div className="w-full max-w-2xl">
@@ -127,7 +114,7 @@ export default function UserDashboard() {
                 <select
                     value={doctorId}
                     onChange={(e) => setDoctorId(e.target.value)}
-                    className="w-full border p-3 rounded mt-1 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border p-3 rounded mt-1"
                     required
                 >
                   <option value="">-- Choose a Doctor --</option>
@@ -151,7 +138,7 @@ export default function UserDashboard() {
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full border p-3 rounded mt-1 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border p-3 rounded mt-1"
                     required
                 />
               </div>
@@ -163,7 +150,7 @@ export default function UserDashboard() {
                     type="time"
                     value={time}
                     onChange={(e) => setTime(e.target.value)}
-                    className="w-full border p-3 rounded mt-1 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border p-3 rounded mt-1"
                     required
                 />
               </div>
@@ -172,16 +159,13 @@ export default function UserDashboard() {
               <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-blue-600 text-white p-3 rounded hover:bg-blue-700 transition flex items-center justify-center text-sm sm:text-base"
+                  className="w-full bg-blue-600 text-white p-3 rounded hover:bg-blue-700"
               >
-                {loading ? (
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                ) : (
-                    "Book Appointment"
-                )}
+                {loading ? "Booking..." : "Book Appointment"}
               </button>
 
             </form>
+
           </div>
         </div>
       </Layout>

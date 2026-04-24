@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { registerUser, loginUser } from "../services/authService";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -25,97 +26,94 @@ export default function Register() {
     setMessage("");
 
     try {
-      // 🔹 REGISTER
-      const res = await fetch("http://63.33.171.154:8080/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData)
-      });
+      // ✅ 1. REGISTER
+      await registerUser(formData);
 
-      if (!res.ok) throw new Error("Registration failed");
+      // ✅ 2. AUTO LOGIN (clean + consistent)
+      const loginData = await loginUser(
+          formData.email,
+          formData.password
+      );
 
-      // 🔹 AUTO LOGIN
-      const loginRes = await fetch("http://63.33.171.154:8080/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password
-        })
-      });
-
-      const loginData = await loginRes.json();
-
+      // ✅ 3. SAVE TOKEN + ROLE
       localStorage.setItem("token", loginData.token);
+      localStorage.setItem("role", loginData.role);
 
       setMessage("Account created successfully 🎉");
 
+      // ✅ 4. REDIRECT BASED ON ROLE
       setTimeout(() => {
-        navigate("/dashboard");
+        if (loginData.role === "ADMIN") navigate("/admin/dashboard");
+        else if (loginData.role === "DOCTOR") navigate("/doctor/dashboard");
+        else navigate("/user/dashboard");
       }, 800);
 
     } catch (error) {
-      setMessage(error.message);
+      setMessage(
+          error.response?.data?.message || "Registration failed"
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
 
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
-          Create Account
-        </h2>
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
 
-        {message && (
-          <div className="mb-4 text-center text-sm text-blue-600">
-            {message}
-          </div>
-        )}
+          <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
+            Create Account
+          </h2>
 
-        {/* Name */}
-        <input
-          name="name"
-          placeholder="Full Name"
-          onChange={handleChange}
-          className="w-full px-4 py-3 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+          {message && (
+              <div className="mb-4 text-center text-sm text-blue-600">
+                {message}
+              </div>
+          )}
 
-        {/* Email */}
-        <input
-          name="email"
-          placeholder="Email Address"
-          onChange={handleChange}
-          className="w-full px-4 py-3 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+          {/* NAME */}
+          <input
+              name="name"
+              placeholder="Full Name"
+              onChange={handleChange}
+              className="w-full px-4 py-3 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
 
-        {/* Password */}
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          onChange={handleChange}
-          className="w-full px-4 py-3 mb-6 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+          {/* EMAIL */}
+          <input
+              name="email"
+              placeholder="Email Address"
+              onChange={handleChange}
+              className="w-full px-4 py-3 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
 
-        {/* Button */}
-        <button
-          onClick={handleRegister}
-          disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition duration-200"
-        >
-          {loading ? "Creating Account..." : "Register"}
-        </button>
+          {/* PASSWORD */}
+          <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              onChange={handleChange}
+              className="w-full px-4 py-3 mb-6 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
 
-        <p className="text-sm text-center text-gray-500 mt-4">
-          Already have an account?{" "}
-          <span className="text-blue-600 cursor-pointer hover:underline">
+          {/* BUTTON */}
+          <button
+              onClick={handleRegister}
+              disabled={loading}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition"
+          >
+            {loading ? "Creating Account..." : "Register"}
+          </button>
+
+          <p className="text-sm text-center text-gray-500 mt-4">
+            Already have an account?{" "}
+            <span className="text-blue-600 cursor-pointer hover:underline">
             Login
           </span>
-        </p>
+          </p>
+
+        </div>
       </div>
-    </div>
   );
 }
