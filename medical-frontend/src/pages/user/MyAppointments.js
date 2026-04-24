@@ -1,18 +1,14 @@
 import React, { useEffect, useState } from "react";
+import { getMyAppointments } from "../../services/appointmentService";
 import Layout from "../../components/Layout";
 
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 
-import {
-  getMyAppointments,
-  deleteAppointment,
-  rescheduleAppointment,
-} from "../../services/appointmentService";
+const API =   process.env.REACT_APP_API_URL || "http://localhost:8080/api/appointments";
 
 export default function MyAppointments() {
-
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -22,8 +18,6 @@ export default function MyAppointments() {
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [newDate, setNewDate] = useState("");
   const [newTime, setNewTime] = useState("");
-
-  const userId = localStorage.getItem("userId");
 
   // ================= FETCH =================
   useEffect(() => {
@@ -36,7 +30,7 @@ export default function MyAppointments() {
       const res = await getMyAppointments();
       setAppointments(res.data);
     } catch (err) {
-      console.log(err?.response?.data || err.message);
+      console.log(err);
     } finally {
       setLoading(false);
     }
@@ -48,41 +42,55 @@ export default function MyAppointments() {
       return;
 
     try {
-      await deleteAppointment(userId, id);
+      const userId = localStorage.getItem("userId");
 
-      setAppointments((prev) =>
-          prev.filter((a) => a.id !== id)
-      );
+      await fetch(`http://63.33.171.154:8080/api/appointments/user/${userId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          appointmentId: id
+        })
+      });
 
+      setAppointments((prev) => prev.filter((a) => a.id !== id));
     } catch (err) {
-      console.log(err?.response?.data || err.message);
+      console.log(err);
     }
   };
 
-  // ================= RESCHEDULE =================
+  // ================= RESCHEDULE (MODAL) =================
   const handleReschedule = async () => {
     try {
-      await rescheduleAppointment(selectedAppointment.id, {
-        date: newDate,
-        time: newTime,
+      await fetch(`${API}/reschedule/${selectedAppointment.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify({
+          date: newDate,
+          time: newTime
+        })
       });
 
       setSelectedAppointment(null);
       setNewDate("");
       setNewTime("");
       fetchAppointments();
-
     } catch (err) {
-      console.log(err?.response?.data || err.message);
+      console.log(err);
     }
   };
 
-  // ================= DRAG RESCHEDULE =================
+  // ================= DRAG & DROP RESCHEDULE (CALENDAR) =================
   const handleEventDrop = async (info) => {
-    const updatedDate = info.event.startStr;
+    const newDate = info.event.startStr;
 
-    const day = new Date(updatedDate).getDay();
-
+    // 🚫 BLOCK WEEKENDS (Hospital rule)
+    const day = new Date(newDate).getDay();
     if (day === 0 || day === 6) {
       alert("Hospital only allows Monday–Friday appointments");
       info.revert();
@@ -90,9 +98,16 @@ export default function MyAppointments() {
     }
 
     try {
-      await rescheduleAppointment(info.event.id, {
-        date: updatedDate,
-        time: info.event.extendedProps.time,
+      await fetch(`${API}/reschedule/${info.event.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify({
+          date: newDate,
+          time: info.event.extendedProps.time
+        })
       });
 
     } catch (err) {
@@ -101,104 +116,131 @@ export default function MyAppointments() {
     }
   };
 
+  // ================= STATUS STYLE =================
+  const getStatusStyle = (status) => {
+    switch (status) {
+      case "APPROVED":
+        return "bg-green-100 text-green-700";
+      case "REJECTED":
+        return "bg-red-100 text-red-700";
+      default:
+        return "bg-yellow-100 text-yellow-700";
+    }
+  };
+
   // ================= FILTER =================
   const filtered = appointments.filter((a) => {
     const matchesSearch =
-        a.doctor.name.toLowerCase().includes(search.toLowerCase());
+      a.doctor.name.toLowerCase().includes(search.toLowerCase());
 
     const matchesStatus =
-        statusFilter === "ALL" ? true : a.status === statusFilter;
+      statusFilter === "ALL" ? true : a.status === statusFilter;
 
     return matchesSearch && matchesStatus;
   });
 
-  // ================= CALENDAR =================
+  // ================= CALENDAR EVENTS =================
   const calendarEvents = appointments.map((a) => ({
     id: a.id,
     title: a.doctor.name,
     date: a.date,
     extendedProps: {
       time: a.time,
-      status: a.status,
-    },
+      status: a.status
+    }
   }));
 
   return (
-      <Layout>
-        <div className="p-6 bg-gray-50 min-h-screen">
+    <Layout>
+      <div className="p-6 bg-gray-50 min-h-screen">
 
-          <h1 className="text-3xl font-bold text-gray-800">
-            My Appointments
-          </h1>
+        <h1 className="text-3xl font-bold text-gray-800">
+          My Appointments
+        </h1>
 
-          {/* CALENDAR */}
-          <div className="bg-white p-4 rounded-xl shadow mb-6">
-            <FullCalendar
-                plugins={[dayGridPlugin, interactionPlugin]}
-                initialView="dayGridMonth"
-                editable={true}
-                events={calendarEvents}
-                eventDrop={handleEventDrop}
-                height="auto"
-            />
+        <p className="text-gray-500 mb-6">
+          Manage bookings (Cards + Hospital Calendar)
+        </p>
+
+        {/* ================= CALENDAR ================= */}
+        <div className="bg-white p-4 rounded-xl shadow mb-6">
+          <FullCalendar
+            plugins={[dayGridPlugin, interactionPlugin]}
+            initialView="dayGridMonth"
+            editable={true}
+            events={calendarEvents}
+            eventDrop={handleEventDrop}
+            height="auto"
+            validRange={{
+              start: new Date()
+            }}
+          />
+        </div>
+
+        {/* ================= LOADING ================= */}
+        {loading && (
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <p className="mt-3 text-gray-600 text-sm">
+              Loading appointments...
+            </p>
           </div>
+        )}
 
-          {/* FILTER */}
-          <div className="flex gap-3 mb-6">
-            <input
+        {/* ================= CONTENT ================= */}
+        {!loading && (
+          <>
+            {/* FILTER */}
+            <div className="flex gap-3 mb-6">
+              <input
                 className="w-full p-3 border rounded-lg"
                 placeholder="Search doctor..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-            />
+              />
 
-            <select
+              <select
                 className="p-3 border rounded-lg"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="ALL">All</option>
-              <option value="PENDING">Pending</option>
-              <option value="APPROVED">Approved</option>
-              <option value="REJECTED">Rejected</option>
-            </select>
-          </div>
+              >
+                <option value="ALL">All</option>
+                <option value="PENDING">Pending</option>
+                <option value="APPROVED">Approved</option>
+                <option value="REJECTED">Rejected</option>
+              </select>
+            </div>
 
-          {/* CARDS */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* CARDS */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
 
-            {filtered.map((a) => (
+              {filtered.map((a) => (
                 <div key={a.id} className="bg-white p-5 rounded-xl shadow border">
 
-                  <h2 className="text-lg font-semibold">
-                    {a.doctor.name}
-                  </h2>
-
-                  <p className="text-sm text-gray-500">
-                    {a.doctor.specialization}
-                  </p>
+                  <h2 className="text-lg font-semibold">{a.doctor.name}</h2>
+                  <p className="text-sm text-gray-500">{a.doctor.specialization}</p>
 
                   <div className="flex justify-between text-sm mt-2 text-gray-600">
                     <span>{a.date}</span>
                     <span>{a.time}</span>
                   </div>
 
-                  <span className="text-xs mt-2 block">
-                {a.status}
-              </span>
+                  <span className={`inline-block mt-3 px-3 py-1 text-xs rounded-full ${getStatusStyle(a.status)}`}>
+                    {a.status}
+                  </span>
 
                   <div className="flex gap-2 mt-4">
 
                     <button
-                        onClick={() => setSelectedAppointment(a)}
-                        className="flex-1 bg-blue-600 text-white py-2 rounded-lg"
+                      onClick={() => setSelectedAppointment(a)}
+                      className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
                     >
                       Reschedule
                     </button>
 
                     <button
-                        onClick={() => handleDelete(a.id)}
-                        className="flex-1 bg-red-600 text-white py-2 rounded-lg"
+                      onClick={() => handleDelete(a.id)}
+                      className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700"
                     >
                       Delete
                     </button>
@@ -206,50 +248,60 @@ export default function MyAppointments() {
                   </div>
 
                 </div>
-            ))}
+              ))}
 
-          </div>
+            </div>
+          </>
+        )}
 
-          {/* MODAL */}
-          {selectedAppointment && (
-              <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+        {/* ================= MODAL ================= */}
+        {selectedAppointment && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
 
-                <div className="bg-white p-6 rounded-xl w-96">
+            <div className="bg-white p-6 rounded-xl w-full max-w-md">
 
-                  <input
-                      type="date"
-                      className="w-full border p-2 mb-2"
-                      value={newDate}
-                      onChange={(e) => setNewDate(e.target.value)}
-                  />
+              <h2 className="text-xl font-bold mb-4">
+                Reschedule Appointment
+              </h2>
 
-                  <input
-                      type="time"
-                      className="w-full border p-2 mb-2"
-                      value={newTime}
-                      onChange={(e) => setNewTime(e.target.value)}
-                  />
+              <input
+                type="date"
+                className="w-full p-3 border rounded-lg mb-3"
+                value={newDate}
+                onChange={(e) => setNewDate(e.target.value)}
+              />
 
-                  <button
-                      onClick={handleReschedule}
-                      className="w-full bg-green-600 text-white p-2 mb-2"
-                  >
-                    Save
-                  </button>
+              <input
+                type="time"
+                className="w-full p-3 border rounded-lg mb-4"
+                value={newTime}
+                onChange={(e) => setNewTime(e.target.value)}
+              />
 
-                  <button
-                      onClick={() => setSelectedAppointment(null)}
-                      className="w-full bg-gray-400 text-white p-2"
-                  >
-                    Cancel
-                  </button>
+              <div className="flex gap-2">
 
-                </div>
+                <button
+                  onClick={handleReschedule}
+                  className="flex-1 bg-green-600 text-white py-2 rounded-lg"
+                >
+                  Save
+                </button>
+
+                <button
+                  onClick={() => setSelectedAppointment(null)}
+                  className="flex-1 bg-gray-400 text-white py-2 rounded-lg"
+                >
+                  Cancel
+                </button>
 
               </div>
-          )}
 
-        </div>
-      </Layout>
+            </div>
+
+          </div>
+        )}
+
+      </div>
+    </Layout>
   );
 }

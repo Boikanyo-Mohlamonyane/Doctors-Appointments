@@ -1,25 +1,24 @@
-import api from "./api";
+import axios from "axios";
 
-// ================= GET USERS =================
+const API = "http://63.33.171.154:8080/api/admin/users";
+
+const authHeader = () => ({
+  headers: {
+    Authorization: `Bearer ${localStorage.getItem("token")}`,
+  },
+});
+
 export const getUsers = (page = 0, size = 10, search = "", role = "") => {
-  return api.get("/admin/users", {
-    params: {
-      page,
-      size,
-      search,
-      role,
-    },
-  });
+  return axios.get(
+    `${API}?page=${page}&size=${size}&search=${search}&role=${role}`,
+    authHeader()
+  );
 };
 
-// ================= UPDATE USER ROLE =================
 export const updateUserRole = (id, role) => {
-  return api.put(`/admin/users/${id}`, {
-    role,
-  });
+  return axios.put(`${API}/${id}`, { role }, authHeader());
 };
 
-// ================= DELETE USER =================
 export const deleteUser = (id) => {
-  return api.delete(`/admin/users/${id}`);
+  return axios.delete(`${API}/${id}`, authHeader());
 };
