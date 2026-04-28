@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
 
-  # 🗄 MYSQL
+  # 🗄 MYSQL Next time use NGINX
   mysql:
     image: mysql:8
     container_name: medical_mysql
