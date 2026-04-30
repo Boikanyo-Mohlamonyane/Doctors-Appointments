@@ -26,80 +26,63 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
+                // ❌ Disable CSRF (API)
                 .csrf(csrf -> csrf.disable())
 
-                // ✅ CORS ENABLED
+                // ✅ Enable CORS (VERY IMPORTANT)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-                // ❌ Stateless session (JWT)
+                // ❌ No sessions (JWT)
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
+                // 🔐 Security rules
                 .authorizeHttpRequests(auth -> auth
 
-                        // ✅ Allow preflight requests
+                        // ✅ Allow preflight (CRITICAL)
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Public routes
+                        // Public endpoints
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/swagger-ui/**",
-                                "/v3/api-docs/**",
-                                "/swagger-ui.html").permitAll()
-                        .requestMatchers("/h2-console/**").permitAll()
 
-                        // Role-based routes
-                        .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
-                        .requestMatchers("/api/doctor/**").hasAuthority("DOCTOR")
-                        .requestMatchers("/api/users/**").hasAuthority("USER")
-
+                        // Everything else secured
                         .anyRequest().authenticated()
                 )
 
-                // For H2 console
-                .headers(headers -> headers.frameOptions(frame -> frame.disable()))
+                // ❌ Disable default login forms
+                .httpBasic(httpBasic -> httpBasic.disable())
+                .formLogin(form -> form.disable())
 
-                // JWT filter
+                // 🔥 JWT filter
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    // ✅ FIXED CORS CONFIG
+    // ✅ GLOBAL CORS CONFIG
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
         CorsConfiguration config = new CorsConfiguration();
 
-        // ✅ Use allowedOriginPatterns (fixes IP + port issues)
         config.setAllowedOriginPatterns(List.of(
                 "http://63.33.171.154:3000"
         ));
 
-        // ✅ Allow all required HTTP methods
         config.setAllowedMethods(List.of(
                 "GET", "POST", "PUT", "DELETE", "OPTIONS"
         ));
 
-        // ✅ Required headers for JWT + JSON
-        config.setAllowedHeaders(List.of(
-                "Authorization",
-                "Content-Type",
-                "Accept",
-                "Origin",
-                "X-Requested-With"
-        ));
+        config.setAllowedHeaders(List.of("*"));
 
-        // ✅ Expose JWT token to frontend
         config.setExposedHeaders(List.of("Authorization"));
 
-        // ✅ Allow cookies / auth headers
         config.setAllowCredentials(true);
 
-        // Cache preflight response
-        config.setMaxAge(3600L);
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
 
         return source;

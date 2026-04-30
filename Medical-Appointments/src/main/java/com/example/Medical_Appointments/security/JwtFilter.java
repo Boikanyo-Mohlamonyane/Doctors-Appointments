@@ -30,26 +30,21 @@ public class JwtFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 
         // =========================================
-        // 1. ALLOW PRE-FLIGHT (CORS FIX)
+        // ✅ HANDLE PREFLIGHT (CORS FIX)
         // =========================================
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+
+            response.setHeader("Access-Control-Allow-Origin", "http://63.33.171.154:3000");
+            response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+            response.setHeader("Access-Control-Allow-Headers", "*");
+            response.setHeader("Access-Control-Allow-Credentials", "true");
+
             response.setStatus(HttpServletResponse.SC_OK);
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        String path = request.getServletPath();
-
-        // =========================================
-        // 2. SKIP PUBLIC ENDPOINTS
-        // =========================================
-        if (isPublicPath(path)) {
-            filterChain.doFilter(request, response);
             return;
         }
 
         // =========================================
-        // 3. GET AUTH HEADER
+        // 🔐 GET TOKEN
         // =========================================
         String authHeader = request.getHeader("Authorization");
 
@@ -63,23 +58,21 @@ public class JwtFilter extends OncePerRequestFilter {
         try {
 
             // =========================================
-            // 4. VALIDATE TOKEN
+            // ✔ VALIDATE TOKEN
             // =========================================
             if (!jwtUtil.validateToken(token)) {
                 filterChain.doFilter(request, response);
                 return;
             }
 
-            // =========================================
-            // 5. EXTRACT USER INFO
-            // =========================================
             String email = jwtUtil.extractEmail(token);
             String role = jwtUtil.extractRole(token);
 
             // =========================================
-            // 6. SET SECURITY CONTEXT
+            // ✔ SET AUTH
             // =========================================
-            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            if (email != null &&
+                    SecurityContextHolder.getContext().getAuthentication() == null) {
 
                 UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(
@@ -96,24 +89,13 @@ public class JwtFilter extends OncePerRequestFilter {
             }
 
         } catch (Exception e) {
-            // If anything fails → continue request safely
             filterChain.doFilter(request, response);
             return;
         }
 
         // =========================================
-        // 7. CONTINUE CHAIN (ONLY ONCE)
+        // ✔ CONTINUE
         // =========================================
         filterChain.doFilter(request, response);
-    }
-
-    // =========================================
-    // CLEAN PUBLIC PATH HANDLER
-    // =========================================
-    private boolean isPublicPath(String path) {
-        return path.startsWith("/api/auth")
-                || path.startsWith("/h2-console")
-                || path.startsWith("/v3/api-docs")
-                || path.startsWith("/swagger-ui");
     }
 }
