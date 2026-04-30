@@ -1,70 +1,153 @@
-# Getting Started with Create React App
+# 🏥 Medical Appointment System – Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This is the frontend of the **Medical Appointment Management System**, built using React.
+It allows users, doctors, and admins to interact with the system for booking, managing, and tracking medical appointments.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## 🚀 Features
 
-### `npm start`
+* 🔐 User Authentication (Login & Register)
+* 👨‍⚕️ View Available Doctors
+* 📅 Book Appointments
+* 📊 Dashboard for Users, Doctors, and Admins
+* 🔄 Appointment Rescheduling & Cancellation
+* 📆 Calendar View (FullCalendar Integration)
+* 🔒 JWT-based secure API communication
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+---
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 🛠️ Tech Stack
 
-### `npm test`
+* React (Create React App)
+* Axios (API communication)
+* Tailwind CSS (UI styling)
+* FullCalendar (Scheduling UI)
+* JWT Authentication
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+---
 
-### `npm run build`
+## 🌐 Backend API
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+This frontend connects to the Spring Boot backend:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```
+http://63.33.171.154:8080/api
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Make sure your backend is running and CORS is properly configured.
 
-### `npm run eject`
+---
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## ⚙️ Environment Variables
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Create a `.env` file in the root:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+```
+REACT_APP_API_URL=http://63.33.171.154:8080/api
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+---
 
-## Learn More
+## 📦 Installation
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Clone the repository:
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```bash
+git clone https://github.com/your-username/medical-frontend.git
+cd medical-frontend
+```
 
-### Code Splitting
+Install dependencies:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+```bash
+npm install
+```
 
-### Analyzing the Bundle Size
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## ▶️ Running the App
 
-### Making a Progressive Web App
+```bash
+npm start
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+App will run at:
 
-### Advanced Configuration
+```
+http://localhost:3000
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+---
 
-### Deployment
+## 🏗️ Build for Production
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+```bash
+npm run build
+```
 
-### `npm run build` fails to minify
+Build files will be generated in:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+```
+/build
+```
+
+---
+
+## 🚀 Deployment
+
+This project is deployed using:
+
+* Docker (containerized frontend)
+* GitHub (version control)
+* EC2 Server (hosting)
+
+---
+
+## 🔐 Authentication Flow
+
+1. User logs in via `/auth/login`
+2. Backend returns JWT token
+3. Token is stored in `localStorage`
+4. Axios automatically attaches token to requests
+
+---
+
+## 📁 Project Structure
+
+```
+src/
+ ├── components/
+ ├── pages/
+ ├── services/
+ ├── utils/
+ └── App.js
+```
+
+---
+
+## ⚠️ Known Issues
+
+* CORS errors may occur if backend is misconfigured
+* Ensure correct API URL in `.env`
+* Backend must allow:
+
+  ```
+  http://63.33.171.154:3000
+  ```
+
+---
+
+## 📚 Learn More
+
+* React Docs: https://reactjs.org/
+* Axios Docs: https://axios-http.com/
+* FullCalendar: https://fullcalendar.io/
+
+---
+
+## 👨‍💻 Author
+
+Developed as part of a full-stack project integrating React + Spring Boot + Docker.
+
+---
