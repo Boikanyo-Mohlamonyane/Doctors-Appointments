@@ -46,29 +46,54 @@ jobs:
           script: |
 
             echo "Stopping old containers..."
+            docker rm -f backend frontend nginx || true
 
-            docker rm -f backend || true
-            docker rm -f frontend || true
+            echo "Creating Docker network..."
+            docker network create medical-net || true
 
             echo "Pulling latest images..."
-
             docker pull ${{ secrets.DOCKER_USERNAME }}/medical-backend:latest
             docker pull ${{ secrets.DOCKER_USERNAME }}/medical-frontend:latest
 
             echo "Starting backend..."
-
             docker run -d \
               --restart always \
               --name backend \
-              -p 8080:8080 \
+              --network medical-net \
               ${{ secrets.DOCKER_USERNAME }}/medical-backend:latest
 
             echo "Starting frontend..."
-
             docker run -d \
               --restart always \
               --name frontend \
-              -p 3000:80 \
+              --network medical-net \
               ${{ secrets.DOCKER_USERNAME }}/medical-frontend:latest
+
+            echo "Creating nginx config..."
+            cat <<EOF > nginx.conf
+            server {
+                listen 80;
+
+                location / {
+                    proxy_pass http://frontend:80;
+                }
+
+                location /api/ {
+                    proxy_pass http://backend:8080/api/;
+
+                    proxy_set_header Host \$host;
+                    proxy_set_header X-Real-IP \$remote_addr;
+                }
+            }
+            EOF
+
+            echo "Starting nginx..."
+            docker run -d \
+              --restart always \
+              --name nginx \
+              --network medical-net \
+              -p 80:80 \
+              -v $(pwd)/nginx.conf:/etc/nginx/conf.d/default.conf \
+              nginx
 
             echo "Deployment complete!"
